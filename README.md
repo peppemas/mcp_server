@@ -10,7 +10,7 @@ A C++ implementation of a Model Context Protocol Server with a pluggable module 
 
 ## MCP Server Architecture
 
-The MCP Server is designed to implement a Modal Context Protocol, enabling a modular and extensible architecture. Below
+The MCP Server is designed to implement a Model Context Protocol, enabling a modular and extensible architecture. Below
 is an overview of the project's architecture:
 
 ### Core Components
@@ -46,7 +46,7 @@ is an overview of the project's architecture:
 
 3. **Handling Client Requests**:
     - The server listens for incoming client connections.
-    - It processes requests based on the implemented Modal Context Protocol, which relies on registered plugins for
+    - It processes requests based on the implemented Model Context Protocol, which relies on registered plugins for
       extended capabilities.
 
 4. **Error Handling**:
