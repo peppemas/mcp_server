@@ -6,7 +6,7 @@ if(MINGW)
 
     # This forces static linking of all standard libraries
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
+    #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
 
     # Add pthread explicitly
     link_libraries(pthread)
@@ -16,6 +16,11 @@ endif()
 add_library(weather SHARED
     ${PROJECT_SOURCE_DIR}/plugins/weather/Weather.cpp
 )
+
+# For Linux/Unix, ensure we're building with PIC
+if(UNIX)
+    set_target_properties(weather PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
 
 if(WIN32)
     target_link_libraries(weather PRIVATE ws2_32)
