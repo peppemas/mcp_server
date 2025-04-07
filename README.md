@@ -1,3 +1,5 @@
+![Build Status](https://github.com/peppemas/mcp_server/actions/workflows/cmake-single-platform.yml/badge.svg)
+
 # CPP MCP-SERVER
 
 A C++ implementation of a Model Context Protocol Server with a pluggable module architecture.
