@@ -30,5 +30,5 @@ else()
     target_link_libraries(sleep PRIVATE Threads::Threads)
 endif()
 
-target_compile_definitions(sleep PRIVATE PLUGIN_API)
+target_compile_definitions(sleep PRIVATE SLEEP_EXPORTS)
 target_include_directories(sleep PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src/interface)

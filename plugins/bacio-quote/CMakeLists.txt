@@ -30,5 +30,5 @@ else()
     target_link_libraries(bacio-quote PRIVATE Threads::Threads)
 endif()
 
-target_compile_definitions(bacio-quote PRIVATE PLUGIN_API)
+target_compile_definitions(bacio-quote PRIVATE BACIOQUOTE_EXPORTS)
 target_include_directories(bacio-quote PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src/interface)

@@ -35,5 +35,5 @@ else()
     target_link_libraries(codereview PRIVATE Threads::Threads)
 endif()
 
-target_compile_definitions(codereview PRIVATE PLUGIN_API)
+target_compile_definitions(codereview PRIVATE CODEREVIEW_EXPORTS)
 target_include_directories(codereview PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src/interface)
