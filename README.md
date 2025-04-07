@@ -1,6 +1,6 @@
 # CPP MCP-SERVER
 
-A C++ implementation of a Modal Context Protocol Server with a pluggable module architecture.
+A C++ implementation of a Model Context Protocol Server with a pluggable module architecture.
 
 | Server     | Resources | Prompts | Tools | Sampling | Notifications | Roots | Transport |
 |------------|-----------|---------|-------|----------|---------------|------|-----------|
