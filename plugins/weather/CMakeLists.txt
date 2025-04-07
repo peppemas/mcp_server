@@ -34,6 +34,5 @@ else()
     target_link_libraries(weather PRIVATE Threads::Threads)
 endif()
 
-# Define WEATHER_EXPORTS when building the DLL
-target_compile_definitions(weather PRIVATE WEATHER_EXPORTS)
+target_compile_definitions(weather PRIVATE PLUGIN_API)
 target_include_directories(weather PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src/interface)

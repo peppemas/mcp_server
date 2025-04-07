@@ -6,7 +6,7 @@ if(MINGW)
 
     # This forces static linking of all standard libraries
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
+    #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
 
     # Add pthread explicitly
     link_libraries(pthread)
@@ -17,12 +17,18 @@ add_library(bacio-quote SHARED
         ${PROJECT_SOURCE_DIR}/plugins/bacio-quote/BacioQuote.cpp
 )
 
-if(WIN32)
-    target_link_libraries(bacio-quote PRIVATE ws2_32)
+# For Linux/Unix, ensure we're building with PIC
+if(UNIX)
+    set_target_properties(bacio-quote PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
-target_link_libraries(bacio-quote PRIVATE "-static -static-libgcc -static-libstdc++ -lpthread")
+# Avoid forced static linking on non-Windows (Unix/Linux)
+if(WIN32)
+    target_link_libraries(bacio-quote PRIVATE "-static -static-libgcc -static-libstdc++ -lpthread")
+else()
+    find_package(Threads REQUIRED)
+    target_link_libraries(bacio-quote PRIVATE Threads::Threads)
+endif()
 
-# Define WEATHER_EXPORTS when building the DLL
-target_compile_definitions(bacio-quote PRIVATE WEATHER_EXPORTS)
+target_compile_definitions(bacio-quote PRIVATE PLUGIN_API)
 target_include_directories(bacio-quote PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src/interface)
