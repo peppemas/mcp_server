@@ -14,7 +14,6 @@ endif()
 
 # Add this to your CMakeLists.txt
 add_library(weather SHARED
-
     ${PROJECT_SOURCE_DIR}/plugins/weather/Weather.cpp
 )
 
@@ -22,7 +21,13 @@ if(WIN32)
     target_link_libraries(weather PRIVATE ws2_32)
 endif()
 
-target_link_libraries(weather PRIVATE "-static -static-libgcc -static-libstdc++ -lpthread")
+# Avoid forced static linking on non-Windows (Unix/Linux)
+if(WIN32)
+    target_link_libraries(weather PRIVATE "-static -static-libgcc -static-libstdc++ -lpthread")
+else()
+    find_package(Threads REQUIRED)
+    target_link_libraries(weather PRIVATE Threads::Threads)
+endif()
 
 # Define WEATHER_EXPORTS when building the DLL
 target_compile_definitions(weather PRIVATE WEATHER_EXPORTS)
