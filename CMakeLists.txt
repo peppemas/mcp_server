@@ -56,7 +56,7 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     if(WIN32)
         target_link_options(${PROJECT_NAME} PRIVATE "-static-libgcc" "-static-libstdc++" "-static")
     elseif(UNIX AND NOT APPLE) # e.g., Linux
-        target_link_options(${PROJECT_NAME} PRIVATE "-static-libgcc" "-static-libstdc++" "-static")
+        target_link_options(${PROJECT_NAME} PRIVATE "-static-libgcc" "-static-libstdc++")
     endif()
 endif()
 
