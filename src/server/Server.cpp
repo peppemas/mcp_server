@@ -30,35 +30,165 @@
 
 namespace vx::mcp {
 
+    Server::Server() {
+        functionMap = {
+                {"initialize", [this](const json& req) { return this->InitializeCmd(req); }},
+                {"ping", [this](const json& req) { return this->PingCmd(req); }},
+                {"resources/list", [this](const json& req) { return this->ResourcesListCmd(req); }},
+                {"resources/read", [this](const json& req) { return this->ResourcesReadCmd(req); }},
+                {"tools/list", [this](const json& req) { return this->ToolsListCmd(req); }},
+                {"tools/call", [this](const json& req) { return this->ToolsCallCmd(req); }},
+                {"resources/subscribe", [this](const json& req) { return this->ResourcesSubscribeCmd(req); }},
+                {"resources/unsubscribe", [this](const json& req) { return this->ResourcesUnsubscribeCmd(req); }},
+                {"prompts/list", [this](const json& req) { return this->PromptsListCmd(req); }},
+                {"prompts/get", [this](const json& req) { return this->PromptsGetCmd(req); }},
+                {"logging/setLevel", [this](const json& req) { return this->LoggingSetLevelCmd(req); }},
+                {"completion/complete", [this](const json& req) { return this->CompletionCompleteCmd(req); }},
+                {"roots/list", [this](const json& req) { return this->RootsListCmd(req); }},
+                {"notifications/initialized", [this](const json& req) { return this->NotificationInitializedCmd(req); }},
+                {"notifications/cancelled", [this](const json& req) { return this->NotificationCancelledCmd(req); }},
+                {"notifications/progress", [this](const json& req) { return this->NotificationProgressCmd(req); }},
+                {"notifications/roots/list_changed", [this](const json& req) { return this->NotificationRootsListChangedCmd(req); }},
+                {"notifications/resources/list_changed", [this](const json& req) { return this->NotificationResourcesListChangedCmd(req); }},
+                {"notifications/resources/updated", [this](const json& req) { return this->NotificationResourcesUpdatedCmd(req); }},
+                {"notifications/prompts/list_changed", [this](const json& req) { return this->NotificationPromptsListChangedCmd(req); }},
+                {"notifications/tools/list_changed", [this](const json& req) { return this->NotificationToolsListChangedCmd(req); }},
+                {"notifications/message", [this](const json& req) { return this->NotificationMessageCmd(req); }}
+        };
+    }
+
+    Server::~Server() {
+        Stop();
+    }
+
+    void Server::WriterLoop() {
+        LOG(INFO) << "Writer thread started." << std::endl;
+        while (writer_running_.load()) {
+            std::string notification_to_send;
+            {
+                std::unique_lock<std::mutex> lock(output_mutex_);
+                // Wait until queue is not empty OR writer should stop
+                queue_cv_.wait(lock, [this] { return !notification_queue_.empty() || !writer_running_.load(); });
+
+                // Check running flag again after waking up
+                if (!writer_running_.load() && notification_queue_.empty()) {
+                    break; // Exit loop if stopped and queue is empty
+                }
+
+                if (!notification_queue_.empty()) {
+                    notification_to_send = std::move(notification_queue_.front());
+                    notification_queue_.pop();
+                }
+            } // Release lock before potentially blocking write
+
+            if (!notification_to_send.empty() && transport_) {
+                try {
+                    // Note: Write itself is not locked here, assuming transport handles internal sync
+                    // If transport->Write is not thread-safe, the lock needs to span this call too.
+                    // For stdio, writing from one thread should be okay, but locking provides safety.
+                    // Re-locking here for safety with potential other writes (responses).
+                    std::lock_guard<std::mutex> write_lock(output_mutex_);
+                    if (transport_) { // Check transport again after potential delay
+                        LOG(DEBUG) << "Sending Notification: " << notification_to_send << std::endl;
+                        transport_->Write(notification_to_send);
+                    }
+                } catch (const std::exception& e) {
+                    LOG(ERROR) << "Error writing notification: " << e.what() << std::endl;
+                    // Decide how to handle write errors (e.g., log, ignore, stop?)
+                }
+            }
+            // Small sleep to prevent tight loop if errors occur rapidly
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        LOG(INFO) << "Writer thread stopped." << std::endl;
+    }
+
     bool Server::Connect(const std::shared_ptr<ITransport> &transport) {
-        while (!m_isStopping) {
+        if (!transport) {
+            LOG(ERROR) << "Connect called with null transport." << std::endl;
+            return false;
+        }
+
+        transport_ = transport; // Store the transport pointer
+        isStopping_ = false; // Reset stopping flag
+
+        // Start the writer thread
+        writer_running_ = true;
+        writer_thread_ = std::thread(&Server::WriterLoop, this);
+
+        while (!isStopping_) {
             auto [length, json_string] = transport->Read();
+            if (isStopping_) break;
+
+            if (length == 0 && json_string.empty()) {
+                LOG(INFO) << "Read returned empty data, potentially client disconnected." << std::endl;
+                continue;
+            }
+
             try {
-                LOG(DEBUG) << "Received: " << json_string << std::endl;
                 if (json_string.empty()) continue;
+                LOG(DEBUG) << "Received: " << json_string << std::endl;
                 json request = json::parse(json_string);
-                m_parserErrors = 0; // reset parser error
+                parserErrors_ = 0; // reset parser error
                 json response = HandleRequest(request);
                 if (response != nullptr) {
-                    transport->Write(response.dump());
+                    std::lock_guard<std::mutex> lock(output_mutex_);
+                    LOG(DEBUG) << "Sending Response: " << response.dump() << std::endl;
+                    transport_->Write(response.dump());
                 }
             } catch (json::parse_error &e) {
                 // ok... what should we do in this case ? exit process ? does nothing ?
                 // for now, we manage a max parser consecutive errors
                 LOG(ERROR) << "Error parsing JSON: " << e.what() << std::endl;
-                if (++m_parserErrors > MAX_PARSER_ERRORS) return false;
+                if (++parserErrors_ > MAX_PARSER_ERRORS) return false;
             }
         }
+
+        Stop();
+
         return true;
     }
 
     void Server::Stop() {
-        m_isStopping = true;
+        if (isStopping_) return; // Avoid redundant stopping
+
+        isStopping_ = true;
+        LOG(INFO) << "Stopping server..." << std::endl;
+
+        // Signal and join writer thread
+        writer_running_ = false;
+        queue_cv_.notify_one(); // Wake up the writer thread if waiting
+        if (writer_thread_.joinable()) {
+            writer_thread_.join();
+            LOG(INFO) << "Writer thread joined." << std::endl;
+        }
+        LOG(INFO) << "Server stopped." << std::endl;
+    }
+
+    void Server::SendNotification(const std::string& pluginName, const std::string& method, const json& params) {
+        if (isStopping_) {
+            LOG(WARNING) << "Attempted to send notification while server stopping." << std::endl;
+            return;
+        }
+
+        json notification_json;
+        notification_json["jsonrpc"] = "2.0";
+        notification_json["method"] = "notifications/" + pluginName + "/" + method; // Example qualified method
+        notification_json["params"] = params;
+
+        std::string notification_str = notification_json.dump();
+
+        // Add notification to the queue (protected by the mutex)
+        {
+            std::lock_guard<std::mutex> lock(output_mutex_);
+            notification_queue_.push(std::move(notification_str));
+        }
+        queue_cv_.notify_one(); // Notify the writer thread
     }
 
     json Server::HandleRequest(const json &request) {
         // log the request
-        if (m_verboseLevel == 1) {
+        if (verboseLevel_ == 1) {
             LOG(DEBUG) << "=== Request START ===" << std::endl;
             LOG(DEBUG) << request.dump(4) << std::endl;
             LOG(DEBUG) << "=== Request END ===" << std::endl;
@@ -75,7 +205,7 @@ namespace vx::mcp {
         if (it != functionMap.end()) {
             json response = it->second(request);
             if (response != nullptr) {
-                if (m_verboseLevel == 1) {
+                if (verboseLevel_ == 1) {
                     LOG(DEBUG) << "=== Response START ===" << std::endl;
                     LOG(DEBUG) << response.dump(4) << std::endl;
                     LOG(DEBUG) << "=== Response END ===" << std::endl;
@@ -184,7 +314,7 @@ namespace vx::mcp {
         response["result"]["capabilities"]["prompts"] = json::object();
         response["result"]["capabilities"]["resources"]["subscribe"] = true;
         response["result"]["capabilities"]["logging"] = json::object();
-        response["result"]["serverInfo"]["name"] = m_name;
+        response["result"]["serverInfo"]["name"] = name_;
         response["result"]["serverInfo"]["version"] = PROJECT_VERSION;
         return response;
     }

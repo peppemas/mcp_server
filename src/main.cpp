@@ -54,7 +54,7 @@ void stop_handler(sig_atomic_t s) {
 void ServerNotificationCallbackImpl(const char* pluginName, const char* method, const char* params) {
     std::lock_guard<std::mutex> lock(notificationState.serverNotificationMutex);
     if (server && server->IsValid()) {
-        //server->SendNotification(pluginName, method, params);
+        server->SendNotification(pluginName, method, params);
     }
 }
 

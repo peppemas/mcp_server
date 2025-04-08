@@ -45,7 +45,7 @@ static PluginTool methods[] = {
 };
 
 const char* GetNameImpl() { return "sleep-tools"; }
-const char* GetPluginImpl() { return "1.0.0"; }
+const char* GetVersionImpl() { return "1.0.0"; }
 PluginType GetTypeImpl() { return PLUGIN_TYPE_TOOLS; }
 
 int InitializeImpl() {
@@ -92,7 +92,7 @@ const PluginTool* GetToolImpl(int index) {
 
 static PluginAPI plugin = {
         GetNameImpl,
-        GetPluginImpl,
+        GetVersionImpl,
         GetTypeImpl,
         InitializeImpl,
         HandleRequestImpl,

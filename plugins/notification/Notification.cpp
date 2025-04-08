@@ -23,27 +23,28 @@
 //
 
 #include <thread>
-#include <iostream>
 #include "PluginAPI.h"
 #include "json.hpp"
 
 using json = nlohmann::json;
 
-static PluginPrompt prompts[] = {
+static PluginTool methods[] = {
         {
-            "code-review",
-            "Asks the LLM to analyze code quality and suggest improvements",
-        R"([{
-            "name" : "language",
-            "description" : "The programming language of the code",
-            "required": true
-        }])"
+            "progress_test",
+            "Execute a long running process and inform the client about the progress",
+        R"({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        })"
         }
 };
 
-const char* GetNameImpl() { return "code-review"; }
+const char* GetNameImpl() { return "notification-tools"; }
 const char* GetVersionImpl() { return "1.0.0"; }
-PluginType GetTypeImpl() { return PLUGIN_TYPE_PROMPTS; }
+PluginType GetTypeImpl() { return PLUGIN_TYPE_TOOLS; }
 
 int InitializeImpl() {
     return 1;
@@ -51,18 +52,17 @@ int InitializeImpl() {
 
 char* HandleRequestImpl(const char* req) {
     auto request = json::parse(req);
-    auto language = request["params"]["arguments"]["language"].get<std::string>();
 
-    nlohmann::json response = json::object();
-    nlohmann::json messages = json::array();
-    messages.push_back(json::object({
-            {"role", "user"},
-            {"content", json::object({
-                    {"type", "text"},
-                    {"text", "Please analyze code quality and suggest improvements of this code written in " + language}
-            })}}));
-    response["description"] = "this is the code review prompt";
-    response["messages"] = messages;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+    nlohmann::json responseContent;
+    responseContent["type"] = "text";
+    responseContent["text"] = "Long running example completed.";
+
+    nlohmann::json response;
+    response["content"] = json::array();
+    response["content"].push_back(responseContent);
+    response["isError"] = false;
 
     std::string result = response.dump();
     char* buffer = new char[result.length() + 1];
@@ -78,13 +78,13 @@ char* HandleRequestImpl(const char* req) {
 void ShutdownImpl() {
 }
 
-int GetPromptCountImpl() {
-    return sizeof(prompts) / sizeof(prompts[0]);
+int GetToolCountImpl() {
+    return sizeof(methods) / sizeof(methods[0]);
 }
 
-const PluginPrompt* GetPromptImpl(int index) {
-    if (index < 0 || index >= GetPromptCountImpl()) return nullptr;
-    return &prompts[index];
+const PluginTool* GetToolImpl(int index) {
+    if (index < 0 || index >= GetToolCountImpl()) return nullptr;
+    return &methods[index];
 }
 
 static PluginAPI plugin = {
@@ -94,10 +94,10 @@ static PluginAPI plugin = {
         InitializeImpl,
         HandleRequestImpl,
         ShutdownImpl,
+        GetToolCountImpl,
+        GetToolImpl,
         nullptr,
         nullptr,
-        GetPromptCountImpl,
-        GetPromptImpl,
         nullptr,
         nullptr
 };

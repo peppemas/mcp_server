@@ -26,6 +26,9 @@
 #define MCP_SERVER_SERVER_H
 
 #include <memory>
+#include <queue>
+#include <thread>
+#include <condition_variable>
 #include "ITransport.h"
 #include "json.hpp"
 
@@ -51,16 +54,25 @@ namespace vx::mcp {
 
     class Server {
     public:
-        Server() = default;
+        Server();
+        ~Server();
+
+        // Make Server non-copyable and non-movable for simplicity with threads/mutexes
+        Server(const Server&) = delete;
+        Server& operator=(const Server&) = delete;
+        Server(Server&&) = delete;
+        Server& operator=(Server&&) = delete;
 
         void Stop();
         bool Connect(const std::shared_ptr<ITransport>& transport);
-        inline bool IsValid() { return true; }
-        inline void VerboseLevel(int level) { m_verboseLevel = level; }
-        inline void Name(const std::string& name) { m_name = name; }
+        inline bool IsValid() { return transport_ != nullptr; }
+        inline void VerboseLevel(int level) { verboseLevel_ = level; }
+        inline void Name(const std::string& name) { name_ = name; }
         bool OverrideCallback(const std::string &method, std::function<json(const json&)> function);
+        void SendNotification(const std::string& pluginName, const std::string& method, const json& params);
 
     private:
+        void WriterLoop();
         json HandleRequest(const json& request);
         json BuildRPCError(ErrorCode code, const std::string& id, const std::string &message);
 
@@ -90,35 +102,19 @@ namespace vx::mcp {
         json NotificationMessageCmd(const json& request);
 
     private:
-        std::unordered_map<std::string, std::function<json(const json&)>> functionMap = {
-                {"initialize", [this](const json& req) { return this->InitializeCmd(req); }},
-                {"ping", [this](const json& req) { return this->PingCmd(req); }},
-                {"resources/list", [this](const json& req) { return this->ResourcesListCmd(req); }},
-                {"resources/read", [this](const json& req) { return this->ResourcesReadCmd(req); }},
-                {"tools/list", [this](const json& req) { return this->ToolsListCmd(req); }},
-                {"tools/call", [this](const json& req) { return this->ToolsCallCmd(req); }},
-                {"resources/subscribe", [this](const json& req) { return this->ResourcesSubscribeCmd(req); }},
-                {"resources/unsubscribe", [this](const json& req) { return this->ResourcesUnsubscribeCmd(req); }},
-                {"prompts/list", [this](const json& req) { return this->PromptsListCmd(req); }},
-                {"prompts/get", [this](const json& req) { return this->PromptsGetCmd(req); }},
-                {"logging/setLevel", [this](const json& req) { return this->LoggingSetLevelCmd(req); }},
-                {"completion/complete", [this](const json& req) { return this->CompletionCompleteCmd(req); }},
-                {"roots/list", [this](const json& req) { return this->RootsListCmd(req); }},
-                {"notifications/initialized", [this](const json& req) { return this->NotificationInitializedCmd(req); }},
-                {"notifications/cancelled", [this](const json& req) { return this->NotificationCancelledCmd(req); }},
-                {"notifications/progress", [this](const json& req) { return this->NotificationProgressCmd(req); }},
-                {"notifications/roots/list_changed", [this](const json& req) { return this->NotificationRootsListChangedCmd(req); }},
-                {"notifications/resources/list_changed", [this](const json& req) { return this->NotificationResourcesListChangedCmd(req); }},
-                {"notifications/resources/updated", [this](const json& req) { return this->NotificationResourcesUpdatedCmd(req); }},
-                {"notifications/prompts/list_changed", [this](const json& req) { return this->NotificationPromptsListChangedCmd(req); }},
-                {"notifications/tools/list_changed", [this](const json& req) { return this->NotificationToolsListChangedCmd(req); }},
-                {"notifications/message", [this](const json& req) { return this->NotificationMessageCmd(req); }}
-        };
+        std::unordered_map<std::string, std::function<json(const json&)>> functionMap;
 
-        bool m_isStopping = false;
-        int m_verboseLevel = 0;
-        int m_parserErrors = 0;
-        std::string m_name = "mcp-server";
+        bool isStopping_ = false;
+        int verboseLevel_ = 0;
+        int parserErrors_ = 0;
+        std::string name_ = "mcp-server";
+
+        std::shared_ptr<ITransport> transport_; // Store transport pointer
+        std::queue<std::string> notification_queue_;
+        std::mutex output_mutex_; // Protects both queue and transport writes
+        std::condition_variable queue_cv_;
+        std::thread writer_thread_;
+        std::atomic<bool> writer_running_{false};
     };
 
 }

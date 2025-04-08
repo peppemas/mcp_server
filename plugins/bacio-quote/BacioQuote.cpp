@@ -189,7 +189,7 @@ static PluginResource resources[] = {
 };
 
 const char* GetNameImpl() { return "bacio-quote"; }
-const char* GetPluginImpl() { return "1.0.0"; }
+const char* GetVersionImpl() { return "1.0.0"; }
 PluginType GetTypeImpl() { return PLUGIN_TYPE_RESOURCES; }
 
 int InitializeImpl() {
@@ -239,7 +239,7 @@ const PluginResource* GetResourceImpl(int index) {
 
 static PluginAPI plugin = {
         GetNameImpl,
-        GetPluginImpl,
+        GetVersionImpl,
         GetTypeImpl,
         InitializeImpl,
         HandleRequestImpl,
