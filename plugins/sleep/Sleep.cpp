@@ -52,9 +52,7 @@ int InitializeImpl() {
     return 1;
 }
 
-const char* HandleRequestImpl(const char* req) {
-    static char buffer[10240];
-
+char* HandleRequestImpl(const char* req) {
     auto request = json::parse(req);
 
     auto milliseconds = request["params"]["arguments"]["milliseconds"].get<int>();
@@ -70,8 +68,12 @@ const char* HandleRequestImpl(const char* req) {
     response["isError"] = false;
 
     std::string result = response.dump();
-    strncpy(buffer, result.c_str(), sizeof(buffer) - 1);
-    buffer[sizeof(buffer) - 1] = '\0'; // Ensure null termination
+    char* buffer = new char[result.length() + 1];
+#ifdef _WIN32
+    strcpy_s(buffer, result.length() + 1, result.c_str());
+#else
+    strcpy(buffer, result_str.c_str());
+#endif
 
     return buffer;
 }

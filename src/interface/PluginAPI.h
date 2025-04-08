@@ -71,7 +71,7 @@ typedef struct {
     const char* (*GetVersion)();
     PluginType (*GetType)();
     int (*Initialize)();
-    const char* (*HandleRequest)(const char* request);
+    char* (*HandleRequest)(const char* request);
     void (*Shutdown)();
     int (*GetToolCount)();
     const PluginTool* (*GetTool)(int index);

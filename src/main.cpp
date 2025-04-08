@@ -29,6 +29,7 @@
 #include "server/Server.h"
 #include "aixlog.hpp"
 #include "loader/PluginsLoader.h"
+#include "json.hpp"
 
 using namespace popl;
 
@@ -181,13 +182,28 @@ int main(int argc, char **argv) {
         response["result"] = json::object();
         response["result"]["isError"] = true;
 
+        char* res_ptr = nullptr;
+
         for (const auto& plugin : loader->GetPlugins()) {
             if (plugin.instance->GetType() == PLUGIN_TYPE_TOOLS) {
                 for (int i = 0; i < plugin.instance->GetToolCount(); i++) {
                     auto pluginTool = plugin.instance->GetTool(i);
                     if (pluginTool->name == request["params"]["name"]) {
-                        const char* res = plugin.instance->HandleRequest(request.dump().c_str());
-                        response["result"] = json::parse(res);
+                        res_ptr = plugin.instance->HandleRequest(request.dump().c_str());
+                        if (res_ptr) {
+                            try {
+                                response["result"] = json::parse(res_ptr);
+                            } catch (const json::parse_error& e) {
+                                response["result"]["isError"] = true;
+                                response["result"]["content"] = json::array();
+                                response["result"]["content"].push_back({{"type", "text"}, {"text", "Plugin returned malformed data."}});
+                            }
+                            // --- Free the allocated memory ---
+                            delete[] res_ptr;
+                        } else {
+                            LOG(ERROR) << "Plugin " << pluginTool->name << " returned nullptr." << std::endl;
+                        }
+                        return response;
                     }
                 }
             }
@@ -224,14 +240,26 @@ int main(int argc, char **argv) {
         response["id"] = request["id"];
         response["result"] = json::object();
 
+        char* res_ptr = nullptr;
+
         for (const auto& plugin : loader->GetPlugins()) {
             if (plugin.instance->GetType() == PLUGIN_TYPE_PROMPTS) {
                 for (int i = 0; i < plugin.instance->GetPromptCount(); i++) {
                     auto pluginPrompt = plugin.instance->GetPrompt(i);
                     if (pluginPrompt->name == request["params"]["name"]) {
-                        const char* res = plugin.instance->HandleRequest(request.dump().c_str());
-                        response["result"] = json::parse(res);
+                        res_ptr = plugin.instance->HandleRequest(request.dump().c_str());
+                        if (res_ptr) {
+                            try {
+                                response["result"] = json::parse(res_ptr);
+                            } catch (const json::parse_error& e) {
+                                LOG(ERROR) << "Plugin " << pluginPrompt->name << " returned malformed data." << std::endl;
+                                // TODO: how can we handle error here ?
+                            }
+                            // --- Free the allocated memory ---
+                            delete[] res_ptr;
+                        }
                     }
+                    return response;
                 }
             }
         }
@@ -268,13 +296,24 @@ int main(int argc, char **argv) {
         response["id"] = request["id"];
         response["result"] = json::object();
 
+        char* res_ptr = nullptr;
+
         for (const auto& plugin : loader->GetPlugins()) {
             if (plugin.instance->GetType() == PLUGIN_TYPE_RESOURCES) {
                 for (int i = 0; i < plugin.instance->GetResourceCount(); i++) {
                     auto pluginResource = plugin.instance->GetResource(i);
                     if (pluginResource->uri == request["params"]["uri"]) {
-                        const char* res = plugin.instance->HandleRequest(request.dump().c_str());
-                        response["result"] = json::parse(res);
+                        res_ptr = plugin.instance->HandleRequest(request.dump().c_str());
+                        if (res_ptr) {
+                            try {
+                                response["result"] = json::parse(res_ptr);
+                            } catch (const json::parse_error& e) {
+                                LOG(ERROR) << "Plugin " << pluginResource->name << " returned malformed data." << std::endl;
+                                // TODO: how can we handle error here ?
+                            }
+                            // --- Free the allocated memory ---
+                            delete[] res_ptr;
+                        }
                     }
                 }
             }
