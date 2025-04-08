@@ -72,7 +72,7 @@ char* HandleRequestImpl(const char* req) {
 #ifdef _WIN32
     strcpy_s(buffer, result.length() + 1, result.c_str());
 #else
-    strcpy(buffer, result_str.c_str());
+    strcpy(buffer, result.c_str());
 #endif
 
     return buffer;
