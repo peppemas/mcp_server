@@ -22,11 +22,15 @@
 //  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
+// ***** THIS PLUGIN IS IN THE DEVELOPMENT STAGE COULD NOT WORK... *****
+
 #include <thread>
 #include "PluginAPI.h"
 #include "json.hpp"
 
 using json = nlohmann::json;
+
+static NotificationSystem* g_notificationSystem = nullptr;
 
 static PluginTool methods[] = {
         {
@@ -72,6 +76,10 @@ char* HandleRequestImpl(const char* req) {
     strcpy(buffer, result.c_str());
 #endif
 
+    if (g_notificationSystem) {
+        g_notificationSystem->SendToServer(GetNameImpl(), "message", "Long running example completed.");
+    }
+
     return buffer;
 }
 
@@ -103,6 +111,7 @@ static PluginAPI plugin = {
 };
 
 extern "C" PLUGIN_API PluginAPI* CreatePlugin() {
+    g_notificationSystem = plugin.notifications;
     return &plugin;
 }
 

@@ -63,7 +63,7 @@ typedef struct {
 } PluginResource;
 
 typedef struct {
-    ServerNotificationCallback SendToServer;
+    ServerNotificationCallback SendToServer;    // you should not touch this
 } NotificationSystem;
 
 typedef struct {

@@ -122,7 +122,8 @@ namespace vx::mcp {
 
             if (length == 0 && json_string.empty()) {
                 LOG(INFO) << "Read returned empty data, potentially client disconnected." << std::endl;
-                continue;
+                isStopping_ = true;
+                break;
             }
 
             try {
@@ -173,7 +174,7 @@ namespace vx::mcp {
 
         json notification_json;
         notification_json["jsonrpc"] = "2.0";
-        notification_json["method"] = "notifications/" + pluginName + "/" + method; // Example qualified method
+        notification_json["method"] = "notifications/" + method; // Example qualified method
         notification_json["params"] = params;
 
         std::string notification_str = notification_json.dump();
