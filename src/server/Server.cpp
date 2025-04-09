@@ -11,7 +11,7 @@
 //  the following conditions:
 //
 //  The above copyright notice and this permission notice shall be
-//   included in all copies or substantial portions of the Software.
+//  included in all copies or substantial portions of the Software.
 //
 //  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -27,6 +27,7 @@
 #include "Server.h"
 #include "aixlog.hpp"
 #include "version.h"
+#include "../utils/MCPBuilder.h"
 
 namespace vx::mcp {
 
@@ -166,18 +167,13 @@ namespace vx::mcp {
         LOG(INFO) << "Server stopped." << std::endl;
     }
 
-    void Server::SendNotification(const std::string& pluginName, const std::string& method, const json& params) {
+    void Server::SendNotification(const std::string& pluginName, const json& notification) {
         if (isStopping_) {
             LOG(WARNING) << "Attempted to send notification while server stopping." << std::endl;
             return;
         }
 
-        json notification_json;
-        notification_json["jsonrpc"] = "2.0";
-        notification_json["method"] = "notifications/" + method; // Example qualified method
-        notification_json["params"] = params;
-
-        std::string notification_str = notification_json.dump();
+        std::string notification_str = notification.dump();
 
         // Add notification to the queue (protected by the mutex)
         {
@@ -197,7 +193,7 @@ namespace vx::mcp {
 
         // mandatory checks
         if (!request.contains("method")) {
-            return BuildRPCError(InvalidRequest, request["id"], "Missing method");
+            return MCPBuilder::Error(MCPBuilder::InvalidRequest, request["id"], "Missing method");
         }
 
         // handle command
@@ -217,7 +213,7 @@ namespace vx::mcp {
 
         // handle method not found case
         int id = request["id"];
-        return BuildRPCError(ErrorCode::MethodNotFound, std::to_string(id), "Method not found");
+        return MCPBuilder::Error(MCPBuilder::MethodNotFound, std::to_string(id), "Method not found");
     }
 
     bool Server::OverrideCallback(const std::string &method, std::function<json(const json &)> function) {
@@ -226,14 +222,6 @@ namespace vx::mcp {
             return true;
         }
         return false;
-    }
-
-    json Server::BuildRPCError(ErrorCode code, const std::string& id, const std::string &message) {
-        return {
-                {"jsonrpc", "2.0"},
-                {"error", {{"code", code}, {"message", message}}},
-                {"id", id}
-        };
     }
 
     json Server::InitializeCmd(const json &request) {
@@ -367,12 +355,12 @@ namespace vx::mcp {
 
     json Server::ResourcesSubscribeCmd(const json &request) {
         LOG(WARNING) << "ResourcesSubscribeCmd called but NOT YET IMPLEMENTED" << std::endl;
-        return BuildRPCError(ErrorCode::MethodNotFound, request["id"], "Method not found");
+        return MCPBuilder::Error(MCPBuilder::MethodNotFound, request["id"], "Method not found");
     }
 
     json Server::ResourcesUnsubscribeCmd(const json &request) {
         LOG(WARNING) << "ResourcesUnsubscribeCmd called but NOT YET IMPLEMENTED" << std::endl;
-        return BuildRPCError(ErrorCode::MethodNotFound, request["id"], "Method not found");
+        return MCPBuilder::Error(MCPBuilder::MethodNotFound, request["id"], "Method not found");
     }
 
     json Server::PromptsListCmd(const json &request) {
@@ -384,19 +372,19 @@ namespace vx::mcp {
     }
 
     json Server::PromptsGetCmd(const json &request) {
-        return BuildRPCError(ErrorCode::MethodNotFound, request["id"], "Method not found");
+        return MCPBuilder::Error(MCPBuilder::MethodNotFound, request["id"], "Method not found");
     }
 
     json Server::LoggingSetLevelCmd(const json &request) {
-        return BuildRPCError(ErrorCode::MethodNotFound, request["id"], "Method not found");
+        return MCPBuilder::Error(MCPBuilder::MethodNotFound, request["id"], "Method not found");
     }
 
     json Server::CompletionCompleteCmd(const json &request) {
-        return BuildRPCError(ErrorCode::MethodNotFound, request["id"], "Method not found");
+        return MCPBuilder::Error(MCPBuilder::MethodNotFound, request["id"], "Method not found");
     }
 
     json Server::RootsListCmd(const json &request) {
-        return BuildRPCError(ErrorCode::MethodNotFound, request["id"], "Method not found");
+        return MCPBuilder::Error(MCPBuilder::MethodNotFound, request["id"], "Method not found");
     }
 
     json Server::NotificationInitializedCmd(const json &request) {

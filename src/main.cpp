@@ -11,7 +11,7 @@
 //  the following conditions:
 //
 //  The above copyright notice and this permission notice shall be
-//   included in all copies or substantial portions of the Software.
+//  included in all copies or substantial portions of the Software.
 //
 //  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -30,6 +30,7 @@
 #include "aixlog.hpp"
 #include "loader/PluginsLoader.h"
 #include "json.hpp"
+#include "utils/MCPBuilder.h"
 
 using namespace popl;
 
@@ -51,10 +52,11 @@ void stop_handler(sig_atomic_t s) {
 }
 
 /// Notification Implementation from plugins to mcp-client
-void ServerNotificationCallbackImpl(const char* pluginName, const char* method, const char* params) {
+void ClientNotificationCallbackImpl(const char* pluginName, const char* notification) {
     std::lock_guard<std::mutex> lock(notificationState.serverNotificationMutex);
     if (server && server->IsValid()) {
-        server->SendNotification(pluginName, method, params);
+        LOG(INFO) << "Sending notification to mcp-client: " << pluginName << " " << notification << std::endl;
+        server->SendNotification(pluginName, notification);
     }
 }
 
@@ -144,7 +146,7 @@ int main(int argc, char **argv) {
     //============================================================================================
     for (auto& plugin : loader->GetPlugins()) {
         plugin.instance->notifications = new NotificationSystem();
-        plugin.instance->notifications->SendToServer = ServerNotificationCallbackImpl;
+        plugin.instance->notifications->SendToClient = ClientNotificationCallbackImpl;
     }
 
     //============================================================================================
@@ -153,10 +155,7 @@ int main(int argc, char **argv) {
     server->Name(name);
     server->VerboseLevel(verbose ? 1 : 0);
     server->OverrideCallback("tools/list", [&loader](const json& request) {
-        nlohmann::ordered_json response;
-
-        response["jsonrpc"] = "2.0";
-        response["id"] = request["id"];
+        nlohmann::ordered_json response = MCPBuilder::Response(request);
         response["result"]["tools"] = json::array();
 
         for (const auto& plugin : loader->GetPlugins()) {
@@ -175,12 +174,7 @@ int main(int argc, char **argv) {
         return response;
     });
     server->OverrideCallback("tools/call", [&loader](const json& request) {
-        nlohmann::ordered_json response;
-
-        response["jsonrpc"] = "2.0";
-        response["id"] = request["id"];
-        response["result"] = json::object();
-        response["result"]["isError"] = true;
+        nlohmann::ordered_json response = MCPBuilder::Response(request);
 
         char* res_ptr = nullptr;
 
@@ -193,6 +187,7 @@ int main(int argc, char **argv) {
                         if (res_ptr) {
                             try {
                                 response["result"] = json::parse(res_ptr);
+                                response["result"]["isError"] = false;
                             } catch (const json::parse_error& e) {
                                 response["result"]["isError"] = true;
                                 response["result"]["content"] = json::array();
@@ -212,10 +207,7 @@ int main(int argc, char **argv) {
         return response;
     });
     server->OverrideCallback("prompts/list", [&loader](const json& request) {
-        nlohmann::ordered_json response;
-
-        response["jsonrpc"] = "2.0";
-        response["id"] = request["id"];
+        nlohmann::ordered_json response = MCPBuilder::Response(request);
         response["result"]["prompts"] = json::array();
 
         for (const auto& plugin : loader->GetPlugins()) {
@@ -234,11 +226,7 @@ int main(int argc, char **argv) {
         return response;
     });
     server->OverrideCallback("prompts/get", [&loader](const json& request) {
-        nlohmann::ordered_json response;
-
-        response["jsonrpc"] = "2.0";
-        response["id"] = request["id"];
-        response["result"] = json::object();
+        nlohmann::ordered_json response = MCPBuilder::Response(request);
 
         char* res_ptr = nullptr;
 
@@ -267,10 +255,7 @@ int main(int argc, char **argv) {
         return response;
     });
     server->OverrideCallback("resources/list", [&loader](const json& request) {
-        nlohmann::ordered_json response;
-
-        response["jsonrpc"] = "2.0";
-        response["id"] = request["id"];
+        nlohmann::ordered_json response = MCPBuilder::Response(request);
         response["result"]["resources"] = json::array();
 
         for (const auto& plugin : loader->GetPlugins()) {
@@ -290,11 +275,7 @@ int main(int argc, char **argv) {
         return response;
     });
     server->OverrideCallback("resources/read", [&loader](const json& request) {
-        nlohmann::ordered_json response;
-
-        response["jsonrpc"] = "2.0";
-        response["id"] = request["id"];
-        response["result"] = json::object();
+        nlohmann::ordered_json response = MCPBuilder::Response(request);
 
         char* res_ptr = nullptr;
 

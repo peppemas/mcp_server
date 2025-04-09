@@ -11,7 +11,7 @@
 //  the following conditions:
 //
 //  The above copyright notice and this permission notice shall be
-//   included in all copies or substantial portions of the Software.
+//  included in all copies or substantial portions of the Software.
 //
 //  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -44,14 +44,6 @@ namespace vx::mcp {
         PROMPTS = 0 << 3,
     };
 
-    enum ErrorCode {
-        ParseError = -32700,
-        InvalidRequest = -32600,
-        MethodNotFound = -32601,
-        InvalidParams = -32602,
-        InternalError = -32603
-    };
-
     class Server {
     public:
         Server();
@@ -69,12 +61,11 @@ namespace vx::mcp {
         inline void VerboseLevel(int level) { verboseLevel_ = level; }
         inline void Name(const std::string& name) { name_ = name; }
         bool OverrideCallback(const std::string &method, std::function<json(const json&)> function);
-        void SendNotification(const std::string& pluginName, const std::string& method, const json& params);
+        void SendNotification(const std::string& pluginName, const json& notification);
 
     private:
         void WriterLoop();
         json HandleRequest(const json& request);
-        json BuildRPCError(ErrorCode code, const std::string& id, const std::string &message);
 
         json InitializeCmd(const json& request);
         json PingCmd(const json& request);

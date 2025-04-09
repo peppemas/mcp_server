@@ -11,7 +11,7 @@
 //  the following conditions:
 //
 //  The above copyright notice and this permission notice shall be
-//   included in all copies or substantial portions of the Software.
+//  included in all copies or substantial portions of the Software.
 //
 //  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -27,6 +27,7 @@
 #include <thread>
 #include "PluginAPI.h"
 #include "json.hpp"
+#include "../../src/utils/MCPBuilder.h"
 
 using json = nlohmann::json;
 
@@ -36,6 +37,17 @@ static PluginTool methods[] = {
         {
             "progress_test",
             "Execute a long running process and inform the client about the progress",
+        R"({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        })"
+        },
+        {
+            "logging_test",
+            "Execute a logging test. Send a message from server to the client",
         R"({
             "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
@@ -57,11 +69,14 @@ int InitializeImpl() {
 char* HandleRequestImpl(const char* req) {
     auto request = json::parse(req);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    if (g_notificationSystem) {
+        std::string message = MCPBuilder::NotificationLog("info","***************************************** THIS IS A TEST").dump();
+        g_notificationSystem->SendToClient(GetNameImpl(), message.c_str());
+    }
 
-    nlohmann::json responseContent;
-    responseContent["type"] = "text";
-    responseContent["text"] = "Long running example completed.";
+    //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+
+    nlohmann::json responseContent = MCPBuilder::TextContent("test completed.");
 
     nlohmann::json response;
     response["content"] = json::array();
@@ -75,10 +90,6 @@ char* HandleRequestImpl(const char* req) {
 #else
     strcpy(buffer, result.c_str());
 #endif
-
-    if (g_notificationSystem) {
-        g_notificationSystem->SendToServer(GetNameImpl(), "message", "Long running example completed.");
-    }
 
     return buffer;
 }

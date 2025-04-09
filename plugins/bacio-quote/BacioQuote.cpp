@@ -11,7 +11,7 @@
 //  the following conditions:
 //
 //  The above copyright notice and this permission notice shall be
-//   included in all copies or substantial portions of the Software.
+//  included in all copies or substantial portions of the Software.
 //
 //  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -27,6 +27,7 @@
 #include <random>
 #include "PluginAPI.h"
 #include "json.hpp"
+#include "../../src/utils/MCPBuilder.h"
 
 std::vector<std::string> messages = {
             "Amor che nella mente mi ragiona cominciò egli a dir si dolcemente che la dolcezza ancor dentro mi suona. (Dante)",
@@ -207,11 +208,7 @@ char* HandleRequestImpl(const char* req) {
 
     // Build response
     nlohmann::json contents = json::array();
-    contents.push_back(json::object({
-        {"uri", resources[0].uri},
-        {"typeType", resources[0].mime},
-        {"text", messages[distr(gen)]}
-    }));
+    contents.push_back(MCPBuilder::ResourceText(resources[0].uri, resources[0].mime, messages[distr(gen)]));
     response["contents"] = contents;
 
     std::string result = response.dump();

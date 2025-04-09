@@ -33,6 +33,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         src/transport
         src/interface
         libs_tier_01/aixlog-1.5.0/include
+        libs_tier_01/alpaca-0.2.1/include
         ${CMAKE_CURRENT_BINARY_DIR}
 )
 

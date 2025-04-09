@@ -11,7 +11,7 @@
 //  the following conditions:
 //
 //  The above copyright notice and this permission notice shall be
-//   included in all copies or substantial portions of the Software.
+//  included in all copies or substantial portions of the Software.
 //
 //  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -35,7 +35,7 @@
 extern "C" {
 #endif
 
-typedef void (*ServerNotificationCallback)(const char* pluginName, const char* method, const char* params);
+typedef void (*ClientNotificationCallback)(const char* pluginName, const char* notification);
 
 typedef enum {
     PLUGIN_TYPE_TOOLS = 0,
@@ -63,7 +63,7 @@ typedef struct {
 } PluginResource;
 
 typedef struct {
-    ServerNotificationCallback SendToServer;    // you should not touch this
+    ClientNotificationCallback SendToClient;    // you should not touch this
 } NotificationSystem;
 
 typedef struct {
