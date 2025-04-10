@@ -61,7 +61,7 @@ namespace vx::mcp {
         inline void VerboseLevel(int level) { verboseLevel_ = level; }
         inline void Name(const std::string& name) { name_ = name; }
         bool OverrideCallback(const std::string &method, std::function<json(const json&)> function);
-        void SendNotification(const std::string& pluginName, const json& notification);
+        void SendNotification(const std::string& pluginName, const char* notification);
 
     private:
         void WriterLoop();

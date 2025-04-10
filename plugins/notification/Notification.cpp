@@ -31,7 +31,7 @@
 
 using json = nlohmann::json;
 
-static NotificationSystem* g_notificationSystem = nullptr;
+static PluginAPI* g_plugin = nullptr;
 
 static PluginTool methods[] = {
         {
@@ -69,12 +69,12 @@ int InitializeImpl() {
 char* HandleRequestImpl(const char* req) {
     auto request = json::parse(req);
 
-    if (g_notificationSystem) {
+    if (g_plugin) {
         std::string message = MCPBuilder::NotificationLog("info","***************************************** THIS IS A TEST").dump();
-        g_notificationSystem->SendToClient(GetNameImpl(), message.c_str());
+        g_plugin->notifications->SendToClient(GetNameImpl(), message.c_str());
     }
 
-    //std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
     nlohmann::json responseContent = MCPBuilder::TextContent("test completed.");
 
@@ -122,7 +122,7 @@ static PluginAPI plugin = {
 };
 
 extern "C" PLUGIN_API PluginAPI* CreatePlugin() {
-    g_notificationSystem = plugin.notifications;
+    g_plugin = &plugin;
     return &plugin;
 }
 

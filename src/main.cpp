@@ -55,7 +55,6 @@ void stop_handler(sig_atomic_t s) {
 void ClientNotificationCallbackImpl(const char* pluginName, const char* notification) {
     std::lock_guard<std::mutex> lock(notificationState.serverNotificationMutex);
     if (server && server->IsValid()) {
-        LOG(INFO) << "Sending notification to mcp-client: " << pluginName << " " << notification << std::endl;
         server->SendNotification(pluginName, notification);
     }
 }

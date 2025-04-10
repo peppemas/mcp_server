@@ -68,7 +68,7 @@ namespace vx::mcp {
             std::string notification_to_send;
             {
                 std::unique_lock<std::mutex> lock(output_mutex_);
-                // Wait until queue is not empty OR writer should stop
+                // Wait until queue is not empty OR the writer should stop
                 queue_cv_.wait(lock, [this] { return !notification_queue_.empty() || !writer_running_.load(); });
 
                 // Check running flag again after waking up
@@ -167,18 +167,16 @@ namespace vx::mcp {
         LOG(INFO) << "Server stopped." << std::endl;
     }
 
-    void Server::SendNotification(const std::string& pluginName, const json& notification) {
+    void Server::SendNotification(const std::string& pluginName, const char* notification) {
         if (isStopping_) {
             LOG(WARNING) << "Attempted to send notification while server stopping." << std::endl;
             return;
         }
 
-        std::string notification_str = notification.dump();
-
         // Add notification to the queue (protected by the mutex)
         {
             std::lock_guard<std::mutex> lock(output_mutex_);
-            notification_queue_.push(std::move(notification_str));
+            notification_queue_.emplace(notification);
         }
         queue_cv_.notify_one(); // Notify the writer thread
     }
