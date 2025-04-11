@@ -99,6 +99,14 @@ public:
         });
     }
 
+    static json NotificationProgress(const std::string& message, const std::string& progressToken, const int progress, const int total) {
+        return json::object({
+            {"jsonrpc", "2.0"},
+            {"method","notifications/progress"},
+            {"params", { {"progressToken",progressToken}, {"progress",progress}, {"total",total}, {"message",message} }}
+        });
+    }
+
 };
 
 #endif //MCP_SERVER_MCPBUILDER_H

@@ -69,12 +69,51 @@ int InitializeImpl() {
 char* HandleRequestImpl(const char* req) {
     auto request = json::parse(req);
 
-    if (g_plugin) {
-        std::string message = MCPBuilder::NotificationLog("info","***************************************** THIS IS A TEST").dump();
-        g_plugin->notifications->SendToClient(GetNameImpl(), message.c_str());
-    }
+    if (request["params"]["name"] == "logging_test") {
+        if (g_plugin) {
+            std::string message = MCPBuilder::NotificationLog("notice","****** THIS IS A LOGGING TEST!").dump();
+            g_plugin->notifications->SendToClient(GetNameImpl(), message.c_str());
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    } else if (request["params"]["name"] == "progress_test") {
+        // Total duration in seconds
+        const int totalDuration = 10;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        if (!request["params"].contains("_meta") || !request["params"]["_meta"].contains("progressToken")) {
+            nlohmann::json errorResponse;
+            errorResponse["content"] = json::array();
+            errorResponse["content"].push_back(MCPBuilder::TextContent("Missing required parameter: progressToken."));
+            errorResponse["isError"] = true;
+
+            std::string errorResult = errorResponse.dump();
+            char *errorBuffer = new char[errorResult.length() + 1];
+#ifdef _WIN32
+            strcpy_s(errorBuffer, errorResult.length() + 1, errorResult.c_str());
+#else
+            strcpy(errorBuffer, errorResult.c_str());
+#endif
+            return errorBuffer;
+        }
+        std::string progressToken = request["params"]["_meta"]["progressToken"].get<std::string>();
+        
+
+        if (g_plugin) {
+            for (int i = 1; i <= totalDuration; i++) {
+                // Wait for 1 second
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+
+                // Calculate progress percentage
+                int progressPercent = (i * 100) / totalDuration;
+
+                // Create a progress notification
+                std::string progressMessage = "Progress: " + std::to_string(progressPercent) + "%";
+                std::string message = MCPBuilder::NotificationProgress(progressMessage, progressToken, progressPercent, 100).dump();
+
+                // Send notification to client
+                g_plugin->notifications->SendToClient(GetNameImpl(), message.c_str());
+            }
+        }
+    }
 
     nlohmann::json responseContent = MCPBuilder::TextContent("test completed.");
 
