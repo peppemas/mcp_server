@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "mcp-server": {
+      "command": "/Users/peppemas/Documents/GITHUB/mcp_server/build/mcp_server",
+      "args": [
+        "-l","/Users/peppemas/Documents/GITHUB/mcp_server/build/logs",
+        "-p","/Users/peppemas/Documents/GITHUB/mcp_server/build/plugins"
+      ],
+      "env": {
+        "CUSTOM_API_KEY_1": "your-api-key-here",
+        "CUSTOM_API_KEY_2": "your-api-key-here",
+        "SAVE_DIR": "/path/to/save/directory"
+      }
+    }
+  }
+}
