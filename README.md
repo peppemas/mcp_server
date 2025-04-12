@@ -4,9 +4,11 @@ A C++ implementation of a Model Context Protocol Server with a pluggable module 
 
 | Server     | Resources | Prompts | Tools | Sampling | Notifications | Roots | Transport |
 |------------|-----------|---------|-------|----------|---------------|------|-----------|
-| MCP-SERVER | ✅*        | ✅	      | ✅	    | ❌	| ❌              | ❌	   | stdio |
+| MCP-SERVER | ✅*        | ✅	      | ✅	    | ❌	| ✅**           | ❌	   | stdio |
 
 \* Resource Templates aren't supported yet
+
+\** Partially supported 
 
 ## Supported Platforms
 
@@ -14,7 +16,7 @@ A C++ implementation of a Model Context Protocol Server with a pluggable module 
 |--------------|-----------|
 | Windows      | ✅        |
 | Ubuntu Linux | ✅        |
-| Mac OS       | ❌        |
+| Mac OS       | ✅        |
 
 ## MCP Server Architecture
 
@@ -120,7 +122,6 @@ depending on the operating system:
 
 * Notifications [IN PROGRESS]
 * Sampling [IN PROGRESS]
-* Use a robust serialization library for server<->plugins communication
 * Review log level implementation
 * Add json schema validator (https://github.com/pboettch/json-schema-validator)
 * Implements SSE transport

@@ -11,7 +11,7 @@
 //  the following conditions:
 //
 //  The above copyright notice and this permission notice shall be
-//   included in all copies or substantial portions of the Software.
+//  included in all copies or substantial portions of the Software.
 //
 //  THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
 //  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -20,7 +20,6 @@
 //  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 //  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 //  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
 
 #include "PluginsLoader.h"
 
@@ -42,7 +41,11 @@ namespace vx::mcp {
 #ifdef _WIN32
                     if (extension == ".dll")
 #else
+    #ifdef __APPLE__
+                    if (extension == ".dylib" || extension == ".so")
+    #else
                     if (extension == ".so")
+    #endif
 #endif
                     {
                         LoadPlugin(entry.path().string());
