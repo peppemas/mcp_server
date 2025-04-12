@@ -1,5 +1,3 @@
-![Build Status](https://github.com/peppemas/mcp_server/actions/workflows/cmake-single-platform.yml/badge.svg)
-
 # CPP MCP-SERVER
 
 A C++ implementation of a Model Context Protocol Server with a pluggable module architecture.
@@ -9,6 +7,14 @@ A C++ implementation of a Model Context Protocol Server with a pluggable module 
 | MCP-SERVER | ✅*        | ✅	      | ✅	    | ❌	| ❌              | ❌	   | stdio |
 
 \* Resource Templates aren't supported yet
+
+## Supported Platforms
+
+| Platform     | Supported |
+|--------------|-----------|
+| Windows      | ✅        |
+| Ubuntu Linux | ✅        |
+| Mac OS       | ❌        |
 
 ## MCP Server Architecture
 
@@ -92,27 +98,28 @@ depending on the operating system:
 {
   "mcpServers": {
     "mcp-server": {
-        "command": "C:\\mcp-server\\mcp_server.exe",
-        "args": [
-          "-n","developer-server",
-          "-l","C:\\mcp-server\\logs",
-          "-p","C:\\mcp-server\\plugins"
-        ],
-       "env": {
-          "CUSTOM_API_KEY_1": "your-api-key-here",
-          "CUSTOM_API_KEY_2": "your-api-key-here",
-          "SAVE_DIR": "/path/to/save/directory"
-       }      
+      "command": "C:\\mcp-server\\mcp_server.exe",
+      "args": [
+        "-n","developer-server",
+        "-l","C:\\mcp-server\\logs",
+        "-p","C:\\mcp-server\\plugins"
+      ],
+      "env": {
+        "CUSTOM_API_KEY_1": "your-api-key-here",  
+        "CUSTOM_API_KEY_2": "your-api-key-here",
+        "SAVE_DIR": "/path/to/save/directory"
+      }      
     }
   }
 }
 ```
 
+**NOTE**: In the "env" block you can pass parameters to your plugins
+
 ### TODO LIST
 
 * Notifications [IN PROGRESS]
 * Sampling [IN PROGRESS]
-* Create a support class to build notifications and responses (text, images, audio, errors, etc.)
 * Use a robust serialization library for server<->plugins communication
 * Review log level implementation
 * Add json schema validator (https://github.com/pboettch/json-schema-validator)

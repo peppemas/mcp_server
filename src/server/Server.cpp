@@ -169,7 +169,7 @@ namespace vx::mcp {
 
     void Server::SendNotification(const std::string& pluginName, const char* notification) {
         if (isStopping_) {
-            LOG(WARNING) << "Attempted to send notification while server stopping." << std::endl;
+            LOG(WARNING) << pluginName << " attempted to send notification while server stopping." << std::endl;
             return;
         }
 
