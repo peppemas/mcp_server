@@ -55,8 +55,12 @@ namespace vx::mcp {
         Server(Server&&) = delete;
         Server& operator=(Server&&) = delete;
 
-        void Stop();
         bool Connect(const std::shared_ptr<ITransport>& transport);
+        bool ConnectAsync(const std::shared_ptr<ITransport> &transport);
+
+        void Stop();
+        void StopAsync();
+
         inline bool IsValid() { return transport_ != nullptr; }
         inline void VerboseLevel(int level) { verboseLevel_ = level; }
         inline void Name(const std::string& name) { name_ = name; }
@@ -106,6 +110,9 @@ namespace vx::mcp {
         std::condition_variable queue_cv_;
         std::thread writer_thread_;
         std::atomic<bool> writer_running_{false};
+
+        std::thread reader_thread_;
+        std::atomic<bool> reader_running_ = false;
     };
 
 }

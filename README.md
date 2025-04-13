@@ -2,9 +2,9 @@
 
 A C++ implementation of a Model Context Protocol Server with a pluggable module architecture.
 
-| Server     | Resources | Prompts | Tools | Sampling | Notifications | Roots | Transport |
-|------------|-----------|---------|-------|----------|---------------|------|-----------|
-| MCP-SERVER | ✅*        | ✅	      | ✅	    | ❌	| ✅**           | ❌	   | stdio |
+| Server     | Resources | Prompts | Tools | Sampling | Notifications | Roots  | Transport  |
+|------------|-----------|---------|-------|----------|---------------|--------|------------|
+| MCP-SERVER | ✅*        | ✅	      | ✅	    | ❌	| ✅**           | ❌	     | stdio      |
 
 \* Resource Templates aren't supported yet
 
@@ -12,11 +12,29 @@ A C++ implementation of a Model Context Protocol Server with a pluggable module 
 
 ## Supported Platforms
 
-| Platform     | Supported |
-|--------------|-----------|
-| Windows      | ✅        |
-| Ubuntu Linux | ✅        |
-| Mac OS       | ✅        |
+| Platform     | Supported | Compiler |
+|--------------|-----------|----------|
+| Windows      | ✅        | MINGW64  |
+| Ubuntu Linux | ✅        | GCC      |
+| Mac OS       | ✅        | GCC      |
+
+## How to compile
+
+Clone the repository on your local machine 
+
+```commandline
+git clone https://github.com/peppemas/mcp_server.git
+```
+
+Compile
+
+```commandline
+cd mcp_server
+mkdir build
+cd build
+cmake ..
+make
+```
 
 ## MCP Server Architecture
 
@@ -31,9 +49,9 @@ is an overview of the project's architecture:
 
 2. **Command-Line Interface**:  
    Provides command-line arguments for configuration:
-    - `-n`: Specifies the name of the server to expose to clients.
-    - `-p`: Sets the path to the plugins directory.
-    - `-l`: Sets the path to the logs directory.
+    - `-n`: Specifies the name of the server to expose to clients. (optional)
+    - `-p`: Sets the path to the plugins directory where to search the plugins (it searches also in subdirectories).
+    - `-l`: Sets the path to the log directory.
 
 3. **Plugin System**:  
    The server is designed to load plugins dynamically from a specified directory (`-p` argument). Each plugin extends
@@ -70,7 +88,7 @@ without modifying the core logic. Plugins are dynamically loaded libraries and c
 depending on the operating system:
 
 - **On Windows**: Plugins are compiled as `.dll` files.
-- **On Linux/MacOS**: Plugins are compiled as `.so` (shared object) files.
+- **On Linux/MacOS**: Plugins are compiled as `.so` or `.dylib` (shared object) files.
 
 #### Example Plugins
 
@@ -115,12 +133,11 @@ depending on the operating system:
   }
 }
 ```
-
 **NOTE**: In the "env" block you can pass parameters to your plugins
+e
 
 ### TODO LIST
 
-* Notifications [IN PROGRESS]
 * Sampling [IN PROGRESS]
 * Review log level implementation
 * Add json schema validator (https://github.com/pboettch/json-schema-validator)

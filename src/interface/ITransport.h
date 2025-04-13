@@ -26,6 +26,7 @@
 #define MCP_SERVER_ITRANSPORT_H
 
 #include <string>
+#include <future>
 
 namespace vx {
 
@@ -33,6 +34,9 @@ namespace vx {
     public:
         virtual std::pair<size_t, std::string> Read() = 0;
         virtual void Write(const std::string& json_data) = 0;
+
+        virtual std::future<std::pair<size_t, std::string>> ReadAsync() = 0;
+        virtual std::future<void> WriteAsync(const std::string& json_data) = 0;
 
         virtual std::string GetName() = 0;
         virtual std::string GetVersion() = 0;

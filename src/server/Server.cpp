@@ -151,6 +151,64 @@ namespace vx::mcp {
         return true;
     }
 
+    bool Server::ConnectAsync(const std::shared_ptr<ITransport> &transport) {
+        if (!transport) {
+            LOG(ERROR) << "ConnectAsync called with null transport." << std::endl;
+            return false;
+        }
+
+        transport_ = transport;
+        isStopping_ = false;
+
+        // Start the writer thread
+        writer_running_ = true;
+        writer_thread_ = std::thread(&Server::WriterLoop, this);
+
+        // Start the async reader thread
+        reader_running_ = true;
+        reader_thread_ = std::thread([this]() {
+            LOG(INFO) << "Async Reader thread started." << std::endl;
+            while (reader_running_ && !isStopping_) {
+                try {
+                    auto future = transport_->ReadAsync();
+                    auto [length, json_string] = future.get();
+
+                    if (isStopping_ || (length == 0 && json_string.empty())) {
+                        LOG(INFO) << "Empty message or stopping. Reader exiting.";
+                        break;
+                    }
+
+                    if (!json_string.empty()) {
+                        LOG(DEBUG) << "Received: " << json_string << std::endl;
+                        json request = json::parse(json_string);
+                        parserErrors_ = 0;
+
+                        json response = HandleRequest(request);
+                        if (response != nullptr) {
+                            std::lock_guard<std::mutex> lock(output_mutex_);
+                            LOG(DEBUG) << "Sending Response: " << response.dump() << std::endl;
+                            transport_->Write(response.dump());
+                        }
+                    }
+                } catch (json::parse_error &e) {
+                    LOG(ERROR) << "Error parsing JSON: " << e.what() << std::endl;
+                    if (++parserErrors_ > MAX_PARSER_ERRORS) {
+                        isStopping_ = true;
+                        break;
+                    }
+                } catch (const std::exception &e) {
+                    LOG(ERROR) << "Reader thread exception: " << e.what() << std::endl;
+                    isStopping_ = true;
+                    break;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            LOG(INFO) << "Async Reader thread exiting." << std::endl;
+        });
+
+        return true;
+    }
+
     void Server::Stop() {
         if (isStopping_) return; // Avoid redundant stopping
 
@@ -421,4 +479,27 @@ namespace vx::mcp {
         return nullptr;
     }
 
+    void Server::StopAsync() {
+        if (isStopping_) return;
+
+        isStopping_ = true;
+        LOG(INFO) << "Stopping async server..." << std::endl;
+
+        // Stop writer thread
+        writer_running_ = false;
+        queue_cv_.notify_one();
+        if (writer_thread_.joinable()) {
+            writer_thread_.join();
+            LOG(INFO) << "Writer thread joined." << std::endl;
+        }
+
+        // Stop reader thread
+        reader_running_ = false;
+        if (reader_thread_.joinable()) {
+            reader_thread_.join();
+            LOG(INFO) << "Reader thread joined." << std::endl;
+        }
+
+        LOG(INFO) << "Async server stopped." << std::endl;
+    }
 }

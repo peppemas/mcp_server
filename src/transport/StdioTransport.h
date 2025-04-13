@@ -36,8 +36,11 @@ namespace vx::transport {
         std::pair<size_t, std::string> Read() override;
         void Write(const std::string& json_data) override;
 
+        std::future<std::pair<size_t, std::string>> ReadAsync() override;
+        std::future<void> WriteAsync(const std::string& json_data) override;
+
         inline std::string GetName() override { return "stdio"; }
-        inline std::string GetVersion() override { return "0.1"; }
+        inline std::string GetVersion() override { return "0.2"; }
         inline int GetPort() override { return 0; }
     };
 

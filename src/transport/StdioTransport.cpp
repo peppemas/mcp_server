@@ -44,8 +44,25 @@ namespace vx::transport {
         return {json_data.length(), json_data};
     }
 
+    std::future<std::pair<size_t, std::string>> Stdio::ReadAsync() {
+        return std::async(std::launch::async, []() {
+            std::string json_data;
+            int c;
+            while ((c = std::getc(stdin)) != EOF && c != '\n') {
+                json_data += static_cast<char>(c);
+            }
+            return std::make_pair(json_data.length(), json_data);
+        });
+    }
+
     void Stdio::Write(const std::string& json_data) {
         std::cout << json_data << std::endl << std::flush;
+    }
+
+    std::future<void> Stdio::WriteAsync(const std::string& json_data) {
+        return std::async(std::launch::async, [json_data]() {
+            std::cout << json_data << std::endl << std::flush;
+        });
     }
 
 }
