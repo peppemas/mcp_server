@@ -31,6 +31,7 @@
 #include "loader/PluginsLoader.h"
 #include "json.hpp"
 #include "utils/MCPBuilder.h"
+#include <csignal>
 
 using namespace popl;
 
