@@ -33,6 +33,8 @@
 #include "utils/MCPBuilder.h"
 #include <csignal>
 
+#include "SseTransport.h"
+
 using namespace popl;
 
 std::shared_ptr<vx::mcp::Server> server;
@@ -65,9 +67,11 @@ int main(int argc, char **argv) {
     std::string name;
     std::string plugins_directory;
     std::string logs_directory;
+    std::string transport_medium;
     bool verbose;
 
-    auto transport = std::make_shared<vx::transport::Stdio>();
+    // auto transport = std::make_shared<vx::transport::Stdio>();
+    auto transport = std::make_shared<vx::transport::SSE>();
     auto loader = std::make_shared<vx::mcp::PluginsLoader>();
     server = std::make_shared<vx::mcp::Server>();
 
@@ -303,7 +307,17 @@ int main(int argc, char **argv) {
         return response;
     });
 
-    server->Connect(transport);
+    if (transport->Start()) {
+        std::cout << "Server launched..." << std::endl;
+    }
+
+    if (!server->ConnectAsync(transport)) {
+        std::cerr << "An error starting connection" << std::endl;
+    }
+
+    while (transport->IsRunning()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 
     return 0;
 }

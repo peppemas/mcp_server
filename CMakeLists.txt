@@ -24,6 +24,7 @@ set(SOURCES
     src/main.cpp
     src/server/Server.cpp
     src/transport/StdioTransport.cpp
+    src/transport/SseTransport.cpp
     src/loader/PluginsLoader.cpp
 )
 
