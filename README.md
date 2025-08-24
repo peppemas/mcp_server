@@ -10,6 +10,13 @@ A C++ implementation of a Model Context Protocol Server with a pluggable module 
 
 \** Partially supported 
 
+## Supported Transports
+
+| Transport | Supported |
+|-----------|-----------|
+| Stdio     | ✅         | 
+| SSE       | ✅         | 
+
 ## Supported Platforms
 
 | Platform     | Supported | Compiler |
@@ -138,8 +145,6 @@ e
 
 ### TODO LIST
 
-* Sampling [IN PROGRESS]
 * Review log level implementation
 * Add json schema validator (https://github.com/pboettch/json-schema-validator)
-* Implements SSE transport
 * Test on different mcp-client (actually tested only on Claude Desktop)
