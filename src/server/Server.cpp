@@ -117,6 +117,12 @@ namespace vx::mcp {
         writer_running_ = true;
         writer_thread_ = std::thread(&Server::WriterLoop, this);
 
+        // Start transport (required for SSE; should be a no-op/true for stdio)
+        if (!transport_->Start()) {
+            LOG(ERROR) << "Failed to start transport: " << transport_->GetName() << std::endl;
+            return false;
+        }
+
         while (!isStopping_) {
             auto [length, json_string] = transport->Read();
             if (isStopping_) break;
@@ -211,6 +217,14 @@ namespace vx::mcp {
 
     void Server::Stop() {
         if (isStopping_) return; // Avoid redundant stopping
+
+        // Stop transport (SSE shuts server down; stdio can no-op)
+        if (transport_) {
+            LOG(INFO) << "Stopping transport..." << std::endl;
+            transport_->Stop();
+            transport_.reset();
+            LOG(INFO) << "Transport stopped." << std::endl;
+         }
 
         isStopping_ = true;
         LOG(INFO) << "Stopping server..." << std::endl;

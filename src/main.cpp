@@ -26,6 +26,7 @@
 #include "httplib.h"
 #include "popl.hpp"
 #include "StdioTransport.h"
+#include "SseTransport.h"
 #include "server/Server.h"
 #include "aixlog.hpp"
 #include "loader/PluginsLoader.h"
@@ -67,7 +68,7 @@ int main(int argc, char **argv) {
     std::string logs_directory;
     bool verbose;
 
-    auto transport = std::make_shared<vx::transport::Stdio>();
+    std::shared_ptr<vx::ITransport> transport;
     auto loader = std::make_shared<vx::mcp::PluginsLoader>();
     server = std::make_shared<vx::mcp::Server>();
 
@@ -85,6 +86,7 @@ int main(int argc, char **argv) {
     auto plugins_directory_option = op.add<Value<std::string>>("p", "plugins", "the directory where to load the plugins", "./plugins");
     auto logs_directory_option = op.add<Value<std::string>>("l", "logs", "the directory where to store the logs", "./logs");
     auto verbose_option = op.add<Value<bool>>("v", "verbose", "enable verbose", verbose);
+    auto use_sse_server = op.add<Switch>("s", "sse", "start as sse server");
     name_option->assign_to(&name);
     plugins_directory_option->assign_to(&plugins_directory);
     logs_directory_option->assign_to(&logs_directory);
@@ -105,6 +107,15 @@ int main(int argc, char **argv) {
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;
         return -1;
+    }
+
+    //============================================================================================
+    // setup transport
+    //============================================================================================
+    if (use_sse_server) {
+        transport = std::make_shared<vx::transport::SSE>();
+    } else {
+        transport = std::make_shared<vx::transport::Stdio>();
     }
 
     //============================================================================================

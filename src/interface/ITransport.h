@@ -32,6 +32,10 @@ namespace vx {
 
     class ITransport {
     public:
+        virtual bool Start() = 0;
+        virtual void Stop() = 0;
+        virtual bool IsRunning() = 0;
+
         virtual std::pair<size_t, std::string> Read() = 0;
         virtual void Write(const std::string& json_data) = 0;
 
