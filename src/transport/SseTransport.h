@@ -25,12 +25,14 @@
 //
 //  Contributors:
 //    - Erdenebileg Byamba (https://github.com/erd3n)
-//        * Contribution: Initial implementation of SSE Transport protocol
+//        * Contribution: Initial implementation of SSE Transport
+//    - Giuseppe Mastrangelo (https://github.com/peppemas)
+//          * Contribution: Fixed code to be compatible with MCP Server specification
 //
 // -----------------------------------------------------------------------------
 
-#ifndef MCP_SERVER_SSETRANSPORT_HPP
-#define MCP_SERVER_SSETRANSPORT_HPP
+#ifndef MCP_SERVER_SSE_TRANSPORT_HPP
+#define MCP_SERVER_SSE_TRANSPORT_HPP
 
 #include "ITransport.h"
 #include <memory>
@@ -39,18 +41,14 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-
-namespace httplib {
-    class Server;
-    struct Request;
-    struct Response;
-}
+#include <httplib.h>
+#include "utils/SessionBuilder.h"
 
 namespace vx::transport {
 
     class SSE : public vx::ITransport {
     public:
-        explicit SSE(int port = 8080, const std::string& host = "127.0.0.1");
+        explicit SSE(int port = 8080, std::string  host = "127.0.0.1");
         ~SSE();
 
         // Copy const. and assignment disabled
@@ -69,7 +67,7 @@ namespace vx::transport {
         std::future<void> WriteAsync(const std::string& json_data) override;
 
         std::string GetName() override { return "sse"; };
-        std::string GetVersion() override { return "0.2"; };
+        std::string GetVersion() override { return "0.4"; };
         int GetPort() override { return port_; };
 
         bool Start() override;
@@ -80,9 +78,9 @@ namespace vx::transport {
         void SetupRoutes();
         void HandleSSEConnection(const httplib::Request& req, httplib::Response& res);
         void HandlePostMessage(const httplib::Request& req, httplib::Response& res);
-        void HandleOptionsRequest(const httplib::Request& req, httplib::Response& res);
 
-        void SetCORSHeaders(httplib::Response& res);
+        static void HandleOptionsRequest(const httplib::Request& req, httplib::Response& res);
+        static void SetCORSHeaders(httplib::Response& res);
 
         std::string host_;
         int port_;
@@ -105,4 +103,4 @@ namespace vx::transport {
 
 }
 
-#endif //MCP_SERVER_SSETRANSPORT_HPP
+#endif //MCP_SERVER_SSE_TRANSPORT_HPP

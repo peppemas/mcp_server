@@ -24,6 +24,7 @@ set(SOURCES
     src/main.cpp
     src/server/Server.cpp
     src/transport/StdioTransport.cpp
+    src/transport/HttpStreamTransport.cpp
     src/transport/SseTransport.cpp
     src/loader/PluginsLoader.cpp
 )
@@ -31,6 +32,7 @@ set(SOURCES
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE
         include
+        src
         src/transport
         src/interface
         libs_tier_01/aixlog-1.5.0/include

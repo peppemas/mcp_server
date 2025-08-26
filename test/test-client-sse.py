@@ -26,7 +26,7 @@ import json
 import os
 from typing import Optional
 from mcp import ClientSession
-from mcp.client.session_group import ClientSessionGroup, StreamableHttpParameters
+from mcp.client.session_group import SseServerParameters, ClientSessionGroup
 from contextlib import AsyncExitStack
 from dotenv import load_dotenv
 
@@ -64,11 +64,11 @@ class MCPClient:
             print("Creating session group...")
             self.session_group = await self.exit_stack.enter_async_context(ClientSessionGroup())
 
-            server_params = StreamableHttpParameters(
+            server_params = SseServerParameters(
                 url=server_url
             )
 
-            print("Connecting to HTTP Stream server...")
+            print("Connecting to SSE server...")
             self.session = await self.session_group.connect_to_server(server_params)
             print("Connected and session initialized successfully")
 
@@ -121,7 +121,7 @@ class MCPClient:
 
 async def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 test-client-http.py <configuration.json>")
+        print("Usage: python3 test-client-sse.py <configuration.json>")
         sys.exit(1)
 
     client = MCPClient()
@@ -132,7 +132,7 @@ async def main():
         await client.cleanup()
 
 if __name__ == "__main__":
-    print("################# NOT YET IMPLEMENTED #################")
-    print("##       DONT USE THIS FOR NOW, IT IS NOT WORKING    ##")
     import sys
     asyncio.run(main())
+
+

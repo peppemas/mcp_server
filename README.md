@@ -2,9 +2,9 @@
 
 A C++ implementation of a Model Context Protocol Server with a pluggable module architecture.
 
-| Server     | Resources | Prompts | Tools | Sampling | Notifications | Roots  | Transport  |
-|------------|-----------|---------|-------|----------|---------------|--------|------------|
-| MCP-SERVER | ✅*        | ✅	      | ✅	    | ❌	| ✅**           | ❌	     | stdio      |
+| Server     | Resources | Prompts | Tools | Sampling | Notifications | Roots  |  Elicitations |
+|------------|-----------|---------|-------|----------|---------------|--------|--------------|
+| MCP-SERVER | ✅*        | ✅	      | ✅	    | ❌	| ✅**           | ❌	     | ❌ |
 
 \* Resource Templates aren't supported yet
 
@@ -12,10 +12,11 @@ A C++ implementation of a Model Context Protocol Server with a pluggable module 
 
 ## Supported Transports
 
-| Transport | Supported |
-|-----------|-----------|
-| Stdio     | ✅         | 
-| SSE       | ✅         | 
+| Transport  | Supported | Authorization | 
+|------------|-----------|---------------|
+| Stdio      | ✅         | ❌             |
+| SSE        | ✅         | ❌             |
+| HttpStream | ❌         | ❌             |
 
 ## Supported Platforms
 

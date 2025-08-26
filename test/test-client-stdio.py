@@ -22,12 +22,14 @@
 #  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import asyncio
+import json
+import os
+from typing import Optional
 from mcp import ClientSession, StdioServerParameters
+from mcp.client.session_group import SseServerParameters
 from mcp.client.stdio import stdio_client
 from contextlib import AsyncExitStack
 from dotenv import load_dotenv
-import json
-import os
 
 load_dotenv()
 
@@ -120,7 +122,7 @@ class MCPClient:
 
 async def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 test-client.py <configuration.json>")
+        print("Usage: python3 test-client-stdio.py <configuration.json>")
         sys.exit(1)
 
     client = MCPClient()
