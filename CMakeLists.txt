@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Set the project version
 set(PROJECT_VERSION_MAJOR 0)
-set(PROJECT_VERSION_MINOR 7)
+set(PROJECT_VERSION_MINOR 8)
 set(PROJECT_VERSION_PATCH 0)
 
 # Create a version string
