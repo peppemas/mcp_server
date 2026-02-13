@@ -78,6 +78,9 @@ namespace vx::transport {
     }
 
     std::future<void> HttpStream::WriteAsync(const std::string &json_data) {
+        return std::async(std::launch::async, []() {
+             // do nothing (default)
+         });
     }
 
     std::pair<size_t, std::string> HttpStream::Read() {
@@ -85,6 +88,9 @@ namespace vx::transport {
     }
 
     std::future<std::pair<size_t, std::string>> HttpStream::ReadAsync() {
+        return std::async(std::launch::async, []() -> std::pair<size_t, std::string> {
+            return {0, ""}; // default empty read
+        });
     }
 
     void HttpStream::SetupRoutes() {
