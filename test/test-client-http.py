@@ -24,6 +24,7 @@
 import asyncio
 import json
 import os
+import sys
 from typing import Optional
 from mcp import ClientSession
 from mcp.client.session_group import ClientSessionGroup, StreamableHttpParameters
@@ -132,7 +133,4 @@ async def main():
         await client.cleanup()
 
 if __name__ == "__main__":
-    print("################# NOT YET IMPLEMENTED #################")
-    print("##       DONT USE THIS FOR NOW, IT IS NOT WORKING    ##")
-    import sys
     asyncio.run(main())

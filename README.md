@@ -16,7 +16,7 @@ A C++ implementation of a Model Context Protocol Server with a pluggable module 
 |------------|-----------|---------------|
 | Stdio      | ✅         | ❌             |
 | SSE        | ✅         | ❌             |
-| HttpStream | ❌         | ❌             |
+| HttpStream | ✅         | ❌             |
 
 ## Supported Platforms
 

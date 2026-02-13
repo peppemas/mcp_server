@@ -27,6 +27,7 @@
 #include "popl.hpp"
 #include "StdioTransport.h"
 #include "SseTransport.h"
+#include "HttpStreamTransport.hpp"
 #include "server/Server.h"
 #include "aixlog.hpp"
 #include "loader/PluginsLoader.h"
@@ -87,6 +88,7 @@ int main(int argc, char **argv) {
     auto logs_directory_option = op.add<Value<std::string>>("l", "logs", "the directory where to store the logs", "./logs");
     auto verbose_option = op.add<Value<bool>>("v", "verbose", "enable verbose", verbose);
     auto use_sse_server = op.add<Switch>("s", "sse", "start as sse server");
+    auto use_httpstream_server = op.add<Switch>("t", "httpstream", "start as http stream server");
     name_option->assign_to(&name);
     plugins_directory_option->assign_to(&plugins_directory);
     logs_directory_option->assign_to(&logs_directory);
@@ -112,8 +114,10 @@ int main(int argc, char **argv) {
     //============================================================================================
     // setup transport
     //============================================================================================
-    if (use_sse_server) {
+    if (use_sse_server->count() > 0) {
         transport = std::make_shared<vx::transport::SSE>();
+    } else if (use_httpstream_server->count() > 0) {
+        transport = std::make_shared<vx::transport::HttpStream>();
     } else {
         transport = std::make_shared<vx::transport::Stdio>();
     }
